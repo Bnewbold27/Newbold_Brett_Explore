@@ -1,4 +1,3 @@
-# HW7
 
 #1
 
@@ -91,8 +90,7 @@ rSquared <- function(df){
   
   #  Returns:
   #  dataFrame that contains each pair of column names in the first column and 
-  #  the Pearson correlation coefficient for all coefficients whose absolute value
-  #  is greater than the threshold
+  #  the Pearson correlation coefficient squared
   
   #  bn-2016
   
@@ -277,7 +275,7 @@ barGraph <- function(df, ps='off'){
   #  a gray bar graph for every categorical and binary variable
   
   #  bn-2016
-  if(is.data.frame(df))
+  if(is.data.frame(df)) # Let's make sure it is actually a data frame!
   {
     if(ps == 'grid' | ps == 'on' | ps == 'off'){ # Making sure a valid plotswitch is called
       fact_var <- df[sapply(df,is.factor)] # Collecting the factor columns
@@ -286,18 +284,33 @@ barGraph <- function(df, ps='off'){
       
       if(ps == 'grid' | ps == 'on') # Making sure 'on' or 'grid'
         
-        if(length(new_df)!=0)
-        { # We need at least one factor or logical column in the dataframe
+        if(length(new_df)!=0) # We need at least one factor or logical column in the dataframe
+        { 
+          fact_var <- df[sapply(df,is.factor)] # Collecting the factor columns
+          log_var <- df[sapply(df,is.logical)] # Collecting the logical columns
+          new_df <- data.frame(fact_var,log_var) # Combining the two into a refined dataFrame
           var_names <- colnames(new_df) # Column names of the factor and logical variables 
-          for (i in 1:length(new_df)) # Loop for each column
-          {
-            plot <- ggplot(new_df, aes_string(x=var_names[i])) + # Plotting each variable from new_df while labeling the name on x-axis 
-              geom_bar(fill="gray", colour="black") # Gray bar graph 
-            print(plot) # print each plot in the loop
-          }
+          bar_list <- list() # Creating a list with the intention of storing multiple ggplots
+          
+          if(ps=='on') # This will execute if plotswitch is set to 'on'
+            for (i in 1:length(new_df)) # Ranges from 1 to the number of factor and logical variables
+            {
+              plot <- ggplot(new_df, aes_string(x = var_names[i])) + # Creates a new ggplot for each factor and logical variable in data frame
+                geom_bar(fill="gray", colour="black") # Specifying the ggplot to be a bar graph with specific aesthetics 
+              print(plot) # Prints a plot for each loop (for each factor or logical variable found)
+            }
+          else if(ps =="grid") # This will execute if plotswitch is set to 'grid'
+            for (i in 1:length(new_df)) # Ranges from 1 to the number of factor and logical variables
+            {
+              bar_list[[i]]  <- ggplot(new_df, aes_string(x = var_names[i])) +  # Storing each bar graph into one list 
+                geom_bar(fill = "gray", colour = "black") 
+              grid.arrange(grobs = bar_list, ncol = 2) # Placing the bar graphs on one plot, splitting them into two columns
+            }
         } 
+      
+      # "Defense wins championships." - Someone Influential
       else
-        print("There are no factor or logical variables in this dataframe!")
+        print("There are no factor or logical variables in this dataframe!") 
     }          
     else
       print("Please input a valid plot switch : 'off', 'on', or leave blank for no plot.")
@@ -317,7 +330,9 @@ explore <- function(df, ps = 'off', t=0.7, bsizes=c(30)){
   #  bsizes - vector containing numeric binsizes to use for plotting
   
   #  Returns:
-  #  outputs of the "smaller" functions 
+  #  an R list consisting of a frequency table, a summary statistics table, a data frame of numeric variables and their r^2 
+  #  values, a data frame of numeric variables and their r values who pass the threshold. Also plots histograms and bar graphs
+  #  for different variables of the dataframe with different aesthetics
   
   #  bn-2016
   
